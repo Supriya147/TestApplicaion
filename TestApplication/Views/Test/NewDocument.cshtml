@@ -1,0 +1,56 @@
+﻿@model TestApplication.ViewModel.EmployeeDetailsViewModel
+@{
+    @Html.Hidden("AddDocument", Url.Action("CreateNewDocument", "Test"))
+    @Html.Hidden("UpdateDocument", Url.Action("ModifyDocument", "Test"))
+    @Html.Hidden("GetDocumentListView", Url.Action("GetDocumentListView", "Test"))
+    @Html.Hidden("DocumentIdQuick", Model.Id)
+    @Html.Hidden("RelatedId", Model.RelatedId)
+    @Html.AntiForgeryToken()
+}
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@addTagHelper *, AuthoringTagHelpers
+
+<div class="col-md-12">
+    <div class="main-card mb-12 card">
+        <div class="card-body" style="padding-bottom:20px;padding-top:20px;">
+            <h5 class="card-title"><label id="prjTitle">@Model.title</label></h5>
+            
+            <form id="Documentformid" method="post" asp-controller="Test" asp-action="CreateNewDocument"
+                  enctype="multipart/form-data">
+                <input type="hidden" id="EmpId" asp-for="EmpId" value="@Model.RelatedId" />
+                <input type="hidden" id="Id" asp-for="Id" value="@Model.Id" />
+                <div class="position-relative form-group">
+                    <label for="DocumentTitle" class="">FileName</label>
+                    <input asp-for="FileName" name="FileName" id="FileName" placeholder="" type="text" class="form-control" required>
+                </div>
+                <div class="position-relative form-group">
+                    <label for="DocUrl" class="">File</label>
+                    <input asp-for="File" name="File" id="File" placeholder="" type="file" class="form-control" required>
+                </div>
+                <div class="position-relative form-group">
+                    <button class="mt-1 btn btn-primary" id="tbnSubmit">Submit</button>
+                    <button class="mt-1 btn btn-light" type="button" id="tbnCancelSideBar">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+
+    $(document).ready(function () {
+        $('#tbnCancelSideBar').on("click", function () {
+            $('#RightSlidingWindow').removeAttr('class');
+            $('#RightSlidingWindow').attr('class', 'ui-theme-settings');
+        });
+        $.ajaxSetup({
+            beforeSend: function (xhr) {
+                xhr.setRequestHeader("XSRF-TOKEN",
+                    $('input:hidden[name="__RequestVerificationToken"]').val());
+            },
+        });
+
+        
+    });
+    
+</script>

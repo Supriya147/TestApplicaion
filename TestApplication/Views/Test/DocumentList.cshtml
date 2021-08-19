@@ -1,0 +1,143 @@
+﻿@model TestApplication.ViewModel.EmployeeDetailsViewModel.EmployeeDetailsListViewModel
+@{
+    @Html.Hidden("NewDocument", Url.Action("NewDocument", "Test"))
+    @Html.Hidden("DeleteDocument", Url.Action("DeleteDocument", "Test"))
+    @Html.Hidden("GetDocumentList", Url.Action("GetDocumentListView", "Test"))
+    @Html.Hidden("GetDocument", Url.Action("GetDocument", "Test"))
+    @Html.Hidden("RelatedId", Model.RelatedId)
+    @Html.AntiForgeryToken()
+}
+
+<div class="main-card mb-3 card" style="width:100%">
+    <div class="card-body">
+        <h5 class="card-title"><label id="prjTitle">@Model.title</label></h5>
+        <div class="btn-group">
+
+            <a id="btnshowAddDocument" href="#">
+                <i class="pe-7s-plus"></i>New Document
+            </a>
+
+        </div>
+
+        <div id="DocumentDetails" class="table-responsive">
+            <table class="table table-bordered table-striped table-condensed display" id="tblDocumentDetails">
+                <thead>
+                    <tr>
+                        <th style="width: 80px;">FileName</th>
+                        <th style="width: 120px;">Download File</th>
+                        <th style="width:60px;">Action</th>
+
+                    </tr>
+                </thead>
+                <tbody>
+
+                    @foreach (var item in Model.EmployeeDetailsViewModels)
+                    {
+                        <tr>
+                            <td>@item.FileName</td>
+                            <td>
+                                @*<a data="testpara=2&DocumentId=@item.Id" data-toggle="modal" type="button" class="mb-2 mr-2 btn btn-info active btndownloadDocument">
+                                    Download
+                                </a>*@
+                                @Html.ActionLink("Downlaod", "DownloadDocument", new { Id = @item.Id })
+                            </td>
+
+                            <td>
+
+                                <a data="testpara=2&DocumentId=@item.Id" data-toggle="modal" type="button" class="btngrid btnDeleteDocument">
+                                    <i class="pe-7s-trash"></i>
+                                </a>
+                            </td>
+
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+
+    </div>
+</div>
+
+
+<script>
+    $(document).ready(function () {
+
+        $('#tblDocumentDetails').DataTable({
+            dom: "Bfrtip",
+            buttons: [
+            ]
+        });
+
+        $('#btnshowAddDocument').on("click", function () {
+            var RelatedId = $("#RelatedId").val();
+            debugger
+            $("#displayquick").load($("#NewDocument").val() + "?RelatedId=" + RelatedId);
+            $('#RightSlidingWindow').attr('class', 'ui-theme-settings settings-open');
+            event.preventDefault();
+            event.stopPropagation();
+        });
+
+
+        var DeleteClientsObj;
+        var uriDeleteClientsObj;
+        $('#tblDocumentDetails tbody').on('click', '.btnDeleteDocument', function () {
+            DeleteClientsObj = $(this);  //for future use
+            uriDeleteClientsObj = DeleteClientsObj[0].attributes['1'].textContent;
+            uriDeleteClientsObj = $(this).attr('data');
+            var DocumentID = getUrlParameter("DocumentId", uriDeleteClientsObj);
+            var DocumentViewModel = {
+                "Id": parseInt(DocumentID)
+            };
+            $.ajax({
+                url: $("#DeleteDocument").val(),
+                type: "Post",
+                dataType: "json",
+                contentType: "application/json; charset=utf-8",
+                headers: {
+                    RequestVerificationToken:
+                        $('input:hidden[name="__RequestVerificationToken"]').val()
+                },
+                data: JSON.stringify(DocumentViewModel),
+                cache: false,
+                success: function (result) {
+                    var resultdata = JSON.parse(result);
+                    if (resultdata == "success") {
+                        showToolTip('Document deleted successfully');
+                        var RelatedId = $("#RelatedId").val();
+                        $("#DocumentContainer").load($("#GetDocumentList").val() + "?RelatedId=" + RelatedId);
+                    }
+                    else {
+                        showToolTip('Not deleted');
+                    }
+                },
+                fail: function (response) {
+                    showToolTip("JSON Error, Document cannot be Deleted ");
+                }
+            });
+
+
+        });
+
+        //var DeleteClientsObj;
+        //var uriDeleteClientsObj;
+        //$('#tblDocumentDetails tbody').on('click', '.btndownloadDocument', function () {
+        //    DeleteClientsObj = $(this);  //for future use
+        //    uriDeleteClientsObj = DeleteClientsObj[0].attributes['1'].textContent;
+        //    uriDeleteClientsObj = $(this).attr('data');
+        //    var DocumentID = getUrlParameter("DocumentId", uriDeleteClientsObj);
+        //    $("#myPartialViewContainer").load($("#DownloadDocument").val() + "?Id=" + DocumentID);
+        //});
+
+
+
+    });
+
+    function getUrlParameter(name, uri) {
+        name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+        var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+        var results = regex.exec(uri);
+        return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+    }
+
+</script>

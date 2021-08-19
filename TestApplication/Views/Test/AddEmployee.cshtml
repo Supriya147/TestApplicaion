@@ -1,0 +1,215 @@
+﻿@model TestApplication.ViewModel.EmpViewModel
+@{
+    @Html.Hidden("AddEmployee", Url.Action("AddEmp", "Test"))
+    @Html.Hidden("EmployeeList", Url.Action("getEmplistPartial", "Test"))
+    @Html.Hidden("UpdateEmployee", Url.Action("UpdateEmp", "Test"))
+    @Html.Hidden("GetDocumentListView", Url.Action("GetDocumentListView", "Test"))
+    @Html.AntiForgeryToken()
+
+}
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@addTagHelper *, AuthoringTagHelpers
+<!doctype html>
+<html lang="en">
+
+<head>
+    <style>
+        .hiddendisplay {
+            display: none;
+            visibility: hidden;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-main__inner">
+
+        <div class="app-page-title">
+            <div class="page-title-wrapper">
+                <div class="page-title-heading">
+                    <div class="page-title-icon">
+                        <i class="pe-7s-plus icon-gradient bg-ripe-malin">
+                        </i>
+                    </div>
+                    <div>
+                        <label name="empTitle">@Model.Title </label>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+
+        <div class="main-card mb-3 card">
+            <div class="card-body">
+
+                <ul class="nav nav-tabs nav-justified">
+                    <li class="nav-item"><a data-toggle="tab" href="#tab-eg11-0" class="nav-link show active">Employee</a></li>
+                    <li class="nav-item" id="docdiv"><a data-toggle="tab" href="#tab-eg11-1" class="nav-link show">Details</a></li>
+                </ul>
+                <div class="tab-content">
+                    <div class="tab-pane show active" id="tab-eg11-0" role="tabpanel">
+                        <form id="formid" class="needs-validation" novalidate>
+                            <div class="main-card mb-3 card" style="width:100%">
+                                <div class="card-body">
+                                    <h5 class="card-title">Employee Details</h5>
+                                    <input id="Id" type="hidden" value=@Model.Id />
+                                    <div class="form-row">
+                                        <div class="col-md-6 position-relative form-group">
+                                            <label for="Name" class="">Name</label>
+                                            <input asp-for="Name" name="Name" id="Name" class="form-control" required />
+                                        </div>
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="col-md-6 position-relative form-group">
+                                            <label for="Email" class="">Email</label>
+                                            <input asp-for="Email" name="Email" id="Email" type="email" class="form-control" required/>
+                                        </div>
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="col-md-6 position-relative form-group">
+                                            <label for="Designation" class="">Designation</label>
+                                            <input asp-for="Designation" name="Designation" id="Designation" class="form-control" required/>
+                                        </div>
+                                    </div>
+
+                                </div>
+
+
+                                <div style="margin-bottom:5px;">
+                                    <div class="page-title-actions float-right">
+
+                                        <button id="btnCreateEmp" type="Submit" class="mb-2 mr-2 btn btn-primary">
+                                            Submit
+                                        </button>
+
+                                        <a id="btnCancelEmpDetail" class="mb-2 mr-2 btn btn-light">
+                                            Cancel
+                                        </a>
+
+                                        <label id="showmsg"></label>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="tab-pane show" id="tab-eg11-1" role="tabpanel">
+                        <div id="DocumentContainer">
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>
+<script>
+    $(document).ready(function () {
+
+        $('#btnCancelEmpDetail').on("click", function () {
+            $("#myPartialViewContainer").load($("#EmployeeList").val() + "?MenuID=1");
+        });
+     
+        $('#docdiv').attr('style', 'display:none');
+        if (parseInt($("#Id").val()) != "-1") {
+            $("#DocumentContainer").load(encodeURI($("#GetDocumentListView").val() + "?RelatedId=" + $("#Id").val()));
+            $('#docdiv').removeAttr('style', 'display:none');
+        }
+
+        var forms = document.getElementsByClassName('needs-validation');
+
+        var validation = Array.prototype.filter.call(forms, function (form) {
+
+            form.addEventListener('submit', function (event) {
+                if (form.checkValidity() === false) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    showToolTip('Add Mandatory Fields');
+                    form.classList.add('was-validated');
+                }
+                else {
+
+                    var EmpViewModel = {
+                        "Id": parseInt($("#Id").val()),
+                        "Name": $("#Name").val(),
+                        "Email": $("#Email").val(),
+                        "Designation": $("#Designation").val()
+                    };
+                   
+                    var urlToCall = $("#AddEmployee").val();
+                    if (parseInt($("#Id").val()) != "-1")
+                        urlToCall = $("#UpdateEmployee").val();
+                    $.ajax({
+                        url: urlToCall,
+                        type: "Post",
+                        dataType: "json",
+                        contentType: "application/json; charset=utf-8",
+                        headers: {
+                            RequestVerificationToken:
+                                $('input:hidden[name="__RequestVerificationToken"]').val()
+                        },
+                        data: JSON.stringify(EmpViewModel),
+                        cache: false,
+                        async: false,
+                        success: function (result) {
+                            debugger
+                            var resultdata = JSON.parse(result);
+                            if (resultdata == "success") {
+                                form.classList.add('was-validated');
+                                showToolTip('Employee saved successfully');
+                                $("#myPartialViewContainer").load($("#EmployeeList").val() + "?MenuID=1");
+                                event.preventDefault();
+                                event.stopPropagation();
+                                $('#RightSlidingWindow').removeAttr('class');
+                                $('#RightSlidingWindow').attr('class', 'ui-theme-settings');
+
+                            }
+                            else if (resultdata=="1"){
+
+                                form.classList.add('was-validated');
+                                $("#formid").removeAttr('class', 'was-validated');
+                                showToolTip('Email Exists');
+                                $("#myPartialViewContainer").load($("#EmployeeList").val() + "?MenuID=1");
+                                event.preventDefault();
+                                event.stopPropagation();
+                            }
+
+
+
+                        },
+                        fail: function (result) {
+
+                            form.classList.add('was-validated');
+                            $("#formid").removeAttr('class', 'was-validated');
+                            showToolTip('Not Added');
+                            $("#myPartialViewContainer").load($("#EmployeeList").val() + "?MenuID=1");
+                            event.preventDefault();
+                            event.stopPropagation();
+
+                        }
+
+
+                    });
+
+
+
+
+                }
+
+
+            }, false);
+        });
+
+        $.ajaxSetup({
+            beforeSend: function (xhr) {
+                xhr.setRequestHeader("XSRF-TOKEN",
+                    $('input:hidden[name="__RequestVerificationToken"]').val());
+            },
+        });
+
+
+
+    });
+</script>

@@ -1,0 +1,160 @@
+﻿@model TestApplication.ViewModel.EmployeeViewModelList
+@{
+    @Html.Hidden("DeleteEmployee", Url.Action("DeleteEmployee", "Test"))
+    @Html.AntiForgeryToken()
+}
+
+<div class="app-main__inner">
+    <div class="app-page-title">
+        <div class="page-title-wrapper">
+            <div class="page-title-heading">
+                <div class="page-title-icon">
+                    <i class="pe-7s-note2 icon-gradient bg-ripe-malin">
+                    </i>
+                </div>
+                <div>
+                    @*<label name="enqDetTitle">*@
+                    EmployeeList
+                    @*</label>*@
+
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="main-card mb-3 card">
+        <div class="card-body">
+            <div id="Employeesdiv">
+                <div id="Employeesa">
+
+                    <table id="Employees" class="table" width="100%">
+                        <thead>
+                            <tr>
+                                <th>Name/Edit</th>
+                                <th>Email</th>
+                                <th>Designation</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.EmployeeList)
+                            {
+                            <tr>
+                                <td>
+                                    <a data="testpara=2&Id=@item.Id" type="button" class="mb-2 mr-2 btn btn-info active btnEditEmp">
+                                        <span class="glyphicon glyphicon-edit"></span> @item.Name
+                                    </a>
+                                </td>
+                                <td>@item.Email</td>
+                                <td>@item.Designation</td>
+                                <td>
+                                    <a data="testpara=2&Id=@item.Id" type="button" class="btngrid btnDeleteEmp">
+                                        <i class="pe-7s-trash"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+
+    $(document).ready(function () {
+
+        var table = $('#Employees').DataTable({
+            responsive: true,
+            orderCellsTop: true,
+            fixedHeader: true,
+
+            dom: 'Bfrtip',
+            lengthMenu: [
+                [10, 25, 50, -1],
+                ['10', '25', '50', 'all']
+            ],
+            dom: 'lBfrtip',
+            buttons: [
+                'copy', 'csv', 'excel', 'pdf', 'print'
+            ]
+        });
+
+        function getUrlParameter(name, uri) {
+            name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+            var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+            var results = regex.exec(uri);
+            return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+        }
+
+        var EditEmpObj;
+        var uriEditEmpObj;
+        $('#Employees tbody').on('click', '.btnEditEmp', function () {
+            EditEmpObj = $(this);
+            uriEditEmpObj = EditEmpObj[0].attributes['1'].textContent;
+            uriEditEmpObj = $(this).attr('data');
+            var Id = getUrlParameter("Id", uriEditEmpObj);
+            $("#myPartialViewContainer").load($("#ModifyEmp").val() + "?Id=" + Id);
+            $("#displayquick").load($("#DefaultQuick").val());
+            $('#RightSlidingWindow').removeAttr('class');
+            $('#RightSlidingWindow').attr('class', 'ui-theme-settings');
+            return false;
+        });
+
+        
+        var DeleteClientsObj;
+        var uriDeleteClientsObj;
+        $('#Employees tbody').on('click', '.btnDeleteEmp', function () {
+            DeleteClientsObj = $(this);  //for future use
+            uriDeleteClientsObj = DeleteClientsObj[0].attributes['1'].textContent;
+            uriDeleteClientsObj = $(this).attr('data');
+            var Id = getUrlParameter("Id", uriDeleteClientsObj);
+            var EmpViewModel = {
+                "Id": parseInt(Id)
+            };
+            $.ajax({
+                url: $("#DeleteEmployee").val(),
+                type: "Post",
+                dataType: "json",
+                contentType: "application/json; charset=utf-8",
+                headers: {
+                    RequestVerificationToken:
+                        $('input:hidden[name="__RequestVerificationToken"]').val()
+                },
+                data: JSON.stringify(EmpViewModel),
+                cache: false,
+                success: function (result) {
+                    var resultdata = JSON.parse(result);
+                    if (resultdata == "success") {
+                        showToolTip('Employee Deleted Successfully')
+                        $("#myPartialViewContainer").load($("#EmployeeList").val() + "?MenuID=1");
+                    }
+                    else {
+                        showToolTip(resultdata);
+                        $("#myPartialViewContainer").load($("#EmployeeList").val() + "?MenuID=1");
+                    }
+                },
+                fail: function (response) {
+                    showToolTip("JSON Error, Document cannot be Deleted");
+                }
+            });
+
+
+        });
+
+        $.ajaxSetup({
+            beforeSend: function (xhr) {
+                xhr.setRequestHeader("XSRF-TOKEN",
+                    $('input:hidden[name="__RequestVerificationToken"]').val());
+            },
+        });
+
+    });
+</script>
